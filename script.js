@@ -101,30 +101,206 @@ function selectBus(busName) {
 /* ================= RESERVASI FORM (WHATSAPP) ================= */
 
 const reservationForm = document.getElementById("reservationForm");
-const reservationBusSelect = document.getElementById("bus");
-const requestedSeat = new URLSearchParams(window.location.search).get("seat");
+const reservationBusList = document.getElementById("busList");
+const addReservationBusButton = document.getElementById("addBusButton");
+const reservationDestinationSelect = document.getElementById("tujuan");
+const reservationDurationSelect = document.getElementById("durasi");
+const reservationPriceInput = document.getElementById("harga");
+const busFleet = window.busFleet;
 
-if (reservationBusSelect && requestedSeat) {
-    const seatOption = Array.from(reservationBusSelect.options)
-        .find(option => option.value === `Bus ${requestedSeat} Seat`);
-    if (seatOption) {
-        reservationBusSelect.value = seatOption.value;
+const reservationPriceList = [
+    { id: "jakarta-city", destination: "Dalam Kota, Jakarta Area (City Tour)", rates: { 1: [3400000, 2600000], 2: [5200000, 4200000] } },
+    { id: "gadog-purwakarta", destination: "Gadog, Cisarua, Lido, Cijeruk, Pancawati, Purwakarta", rates: { 1: [4000000, 3200000], 2: [6700000, 5200000] } },
+    { id: "bandung-area", destination: "Bandung, Lembang, Subang, Ciater, Sukabumi, Cianjur, Anyer, Carita", rates: { 1: [4700000, 4000000], 2: [7900000, 6500000] } },
+    { id: "jatinangor-pelabuhan-ratu", destination: "Jatinangor, Pengalengan, Ciwidey, Pelabuhan Ratu", rates: { 1: [5500000, 4500000], 2: [8500000, 7000000] } },
+    { id: "tanjung-lesung", destination: "Tanjung Lesung", rates: { 1: [6200000, 5000000], 2: [9200000, 7500000] } },
+    { id: "panjalu-pamijahan", destination: "Panjalu, Haruman, Pemalang, Pekalongan, Cirebon, Pamijahan", rates: { 1: [6800000, 5700000], 2: [9800000, 8300000] } },
+    { id: "pangandaran", destination: "Pangandaran", rates: { 3: [13000000, 11000000] } },
+    { id: "yogyakarta-palembang-muria", destination: "Yogyakarta, Palembang, Muria", rates: { 3: [14200000, 10900000], 4: [18200000, 12900000] } },
+    { id: "ziarah-wali-bangkalan", destination: "Ziarah Wali Songo, Madura Bangkalan", rates: { 5: [24700000, 17300000] } },
+    { id: "bali", destination: "Bali", rates: { 8: [38300000, 25800000] } },
+    { id: "depok-bogor", destination: "Depok, Tangerang, Ciputat, Parung, Karawang, Bogor", rates: { 1: [3700000, 3000000], 2: [6200000, 4700000] } },
+    { id: "gunung-mas-ciloto", destination: "Gunung Mas, Puncak Pass, Cibodas, Cipanas, Ciloto", rates: { 1: [4200000, 3400000], 2: [7200000, 5500000] } },
+    { id: "ziarah-banten-soreang", destination: "Ziarah Banten, Al-Jabar, Al-Mumtaz, Soreang", rates: { 1: [5000000, 4200000], 2: [8200000, 6700000] } },
+    { id: "indramayu-al-kamil", destination: "Indramayu, Garut, Cirebon, Kuningan, Sumedang, Al-Kamil", rates: { 1: [5700000, 4700000], 2: [8700000, 7300000] } },
+    { id: "brebes-guci", destination: "Brebes, Tegal, Guci", rates: { 2: [9500000, 7800000] } },
+    { id: "cirebon-demak-kudus", destination: "Cirebon, Demak, Kudus", rates: { 2: [10000000, 8500000] } },
+    { id: "purwokerto-purbalingga", destination: "Purwokerto, Wonosobo, Dieng, Lampung, Semarang, Purbalingga", rates: { 2: [10200000, 8700000], 3: [13700000, 12200000] } },
+    { id: "yogyakarta-bromo", destination: "Yogyakarta, Malang, Batu, Bromo", rates: { 4: [19200000, 13700000], 5: [23700000, 16700000] } },
+    { id: "ziarah-wali-sumenep", destination: "Ziarah Wali Songo, Madura Kalianget, Sumenep", rates: { 6: [27300000, 20300000] } },
+    { id: "lombok", destination: "Lombok", rates: { 10: [45300000, 30300000] } }
+];
+
+const busPriceClassBySeat = {
+    35: "medium",
+    39: "medium",
+    46: "big",
+    50: "big",
+    59: "big"
+};
+const formatRupiah = amount => `Rp ${amount.toLocaleString("id-ID")}`;
+
+function getReservationBusSelects() {
+    return Array.from(reservationBusList?.querySelectorAll(".reservation-bus-select") || []);
+}
+
+function syncReservationBusOptions() {
+    const selects = getReservationBusSelects();
+    const selectedUnits = selects.map(select => select.value || select.dataset.requestedUnit || "").filter(Boolean);
+
+    selects.forEach(select => {
+        const selectedUnit = select.value || select.dataset.requestedUnit || "";
+        const unavailableUnits = new Set(selectedUnits.filter(unit => unit !== selectedUnit));
+        select.replaceChildren(new Option("Pilih unit bus", ""));
+
+        busFleet.forEach(bus => {
+            if (!unavailableUnits.has(String(bus.unit))) {
+                select.add(new Option(`${bus.name} (${bus.seatCount} Seat)`, bus.unit));
+            }
+        });
+
+        select.value = selectedUnit;
+        delete select.dataset.requestedUnit;
+    });
+
+    const canAddBus = selects.length < busFleet.length;
+    if (addReservationBusButton) {
+        addReservationBusButton.disabled = !canAddBus;
+    }
+
+    reservationBusList?.querySelectorAll(".remove-bus-button").forEach(button => {
+        button.disabled = selects.length === 1;
+    });
+}
+
+function addReservationBus(unit = "") {
+    const row = document.createElement("div");
+    row.className = "reservation-bus-row";
+
+    const select = document.createElement("select");
+    select.className = "reservation-bus-select";
+    select.setAttribute("aria-label", `Pilih unit bus ${getReservationBusSelects().length + 1}`);
+    select.required = true;
+    if (unit) select.dataset.requestedUnit = unit;
+    select.addEventListener("change", () => {
+        syncReservationBusOptions();
+        updateReservationPrice();
+    });
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "remove-bus-button";
+    removeButton.setAttribute("aria-label", "Hapus unit bus");
+    removeButton.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i>';
+    removeButton.addEventListener("click", () => {
+        row.remove();
+        syncReservationBusOptions();
+        updateReservationPrice();
+    });
+
+    row.append(select, removeButton);
+    reservationBusList.appendChild(row);
+    syncReservationBusOptions();
+    updateReservationPrice();
+}
+
+function getReservationBusPrices() {
+    const route = reservationPriceList.find(item => item.id === reservationDestinationSelect?.value);
+    const duration = Number(reservationDurationSelect?.value);
+    const selects = getReservationBusSelects();
+
+    if (!route || !duration || selects.length === 0 || selects.some(select => !select.value)) {
+        return null;
+    }
+
+    const buses = selects.map(select => {
+        const bus = busFleet.find(item => String(item.unit) === select.value);
+        const priceClass = busPriceClassBySeat[bus?.seatCount];
+        const classRate = priceClass === "big" ? 0 : priceClass === "medium" ? 1 : -1;
+        const unitPrice = classRate < 0 ? null : route.rates[duration]?.[classRate];
+
+        return bus && unitPrice ? { bus, unitPrice } : null;
+    });
+
+    return buses.every(Boolean) ? buses : null;
+}
+
+function updateReservationPrice() {
+    if (!reservationPriceInput) return;
+
+    const busPrices = getReservationBusPrices();
+    const totalPrice = busPrices?.reduce((total, item) => total + item.unitPrice, 0);
+    if (!Number.isSafeInteger(totalPrice)) {
+        reservationPriceInput.value = "";
+        return;
+    }
+
+    reservationPriceInput.value = formatRupiah(totalPrice);
+}
+
+const reservationParams = new URLSearchParams(window.location.search);
+const requestedUnit = reservationParams.get("unit");
+const requestedSeat = reservationParams.get("seat");
+
+if (reservationBusList) {
+    if (!Array.isArray(busFleet)) {
+        console.error("Data armada belum dapat dimuat untuk form reservasi.");
+        addReservationBusButton.disabled = true;
+        const message = document.createElement("p");
+        message.textContent = "Data armada tidak tersedia. Silakan coba lagi.";
+        reservationBusList.appendChild(message);
+    } else {
+        const requestedBus = busFleet.find(bus => String(bus.unit) === requestedUnit)
+            || busFleet.find(bus => bus.seatCount === Number(requestedSeat));
+        addReservationBus(requestedBus ? String(requestedBus.unit) : "");
+        addReservationBusButton.addEventListener("click", () => addReservationBus());
     }
 }
 
-if (reservationForm) {
+if (reservationForm && reservationDestinationSelect && reservationDurationSelect) {
+    reservationPriceList.forEach(route => {
+        reservationDestinationSelect.add(new Option(route.destination, route.id));
+    });
+
+    reservationDestinationSelect.addEventListener("change", () => {
+        const route = reservationPriceList.find(item => item.id === reservationDestinationSelect.value);
+        reservationDurationSelect.replaceChildren(new Option(
+            route ? "Pilih durasi perjalanan" : "Pilih tujuan terlebih dahulu",
+            ""
+        ));
+
+        if (route) {
+            Object.keys(route.rates).forEach(days => {
+                reservationDurationSelect.add(new Option(`${days} Hari`, days));
+            });
+        }
+
+        reservationDurationSelect.disabled = !route;
+        updateReservationPrice();
+    });
+
+    [reservationDurationSelect].forEach(input => {
+        input?.addEventListener("change", updateReservationPrice);
+    });
+
     reservationForm.addEventListener("submit", function(event) {
         event.preventDefault();
 
         const nama = document.getElementById("nama").value;
         const tanggal = document.getElementById("tanggal").value;
         const tujuan = document.getElementById("tujuan").value;
+        const durasi = document.getElementById("durasi").value;
         const penjemputan = document.getElementById("penjemputan").value;
         const jam = document.getElementById("jam").value;
-        const bus = document.getElementById("bus").value;
-        const jumlah = document.getElementById("jumlah").value;
         const telepon = document.getElementById("telepon").value;
         const harga = document.getElementById("harga").value;
+        const route = reservationPriceList.find(item => item.id === tujuan);
+        const busPrices = getReservationBusPrices();
+
+        if (!route || !busPrices || !harga) {
+            window.alert("Pilih tujuan, durasi, dan harga yang tersedia untuk setiap unit bus.");
+            return;
+        }
 
         /* FORMAT TANGGAL */
         const dateObject = new Date(tanggal);
@@ -151,7 +327,10 @@ ${nama}
 ${tanggalFormatted}
 
 🚩 *Lokasi Tujuan*
-${tujuan}
+${route.destination}
+
+🗓️ *Durasi*
+${durasi} Hari
 
 🏠 *Lokasi Penjemputan*
 ${penjemputan}
@@ -160,15 +339,15 @@ ${penjemputan}
 ${jam}
 
 🚌 *Unit Bus (Seat)*
-${bus}
+${busPrices.map(({ bus, unitPrice }, index) => `${index + 1}. ${bus.name} (${bus.seatCount} Seat) — ${formatRupiah(unitPrice)}`).join("\n")}
 
 📝 *Jumlah Unit*
-${jumlah} Unit
+${busPrices.length} Unit
 
 ☎️ *No. Telpon*
 ${telepon}
 
-🎟️ *Harga*
+💰 *Estimasi Harga Total*
 ${harga}
 
 ━━━━━━━━━━━━━━━━━━━━
