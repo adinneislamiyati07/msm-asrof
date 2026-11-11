@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Informasi lengkap armada bus MSM Asyrof.">
+    <title>Detail Armada | MSM ASYROF</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="bus-detail.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="bus-detail-page">
+    <header class="detail-navbar">
+        <a class="detail-brand" href="index.html#home">
+            <img src="images/logomsm.PNG" alt="">
+            <span>PT. Asyrof Fadel Ali<small>MSM ASYROF</small></span>
+        </a>
+        <a class="detail-back-link" href="index.html#armada"><i class="fa-solid fa-arrow-left"></i> Kembali ke Armada</a>
+    </header>
+
+    <main class="bus-detail-main" id="busDetail" aria-live="polite">
+        <p class="detail-loading">Memuat informasi armada...</p>
+    </main>
+
+    <script src="bus-data.js"></script>
+    <script src="bus-detail.js"></script>
+</body>
+</html>
