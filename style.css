@@ -1017,6 +1017,43 @@ select {
         0 0 0 3px rgba(200,154,69,.1);
 }
 
+.pickup-map-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    align-self: flex-start;
+    padding: 0 12px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    background: white;
+    color: #8a682b;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.pickup-map-toggle:hover {
+    border-color: #c89a45;
+    background: #fffaf0;
+}
+
+.pickup-map-status {
+    color: #777;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.pickup-map {
+    width: 100%;
+    height: 320px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
 .reservation-bus-list {
     display: grid;
     gap: 8px;
