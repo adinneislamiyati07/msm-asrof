@@ -104,7 +104,8 @@ if (!Array.isArray(busFleet)) {
     const reserveLink = document.createElement("a");
     reserveLink.className = "detail-reserve-button";
     reserveLink.href = `index.html?unit=${bus.unit}#reservasi`;
-    reserveLink.innerHTML = '<i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Reservasi Kapasitas Ini';
+    reserveLink.setAttribute("aria-label", `Tambah ${bus.name} ke form reservasi`);
+    reserveLink.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah ke Form';
     facilitiesPanel.appendChild(reserveLink);
 
     detailRoot.replaceChildren(heading, gallery, content);
