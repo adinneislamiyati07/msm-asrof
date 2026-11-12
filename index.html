@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>PT. Asyrof Fadel Ali | MSM ASYROF</title>
+    <title>Sewa Bus Pariwisata Cileungsi & Jabodetabek | PT. Asyrof Fadel Ali</title>
+    <!-- Tambahkan Meta Description di sini -->
+    <meta name="description" content="Jasa sewa bus pariwisata terpercaya di Cileungsi dan Jabodetabek. Menyediakan armada Big Bus & Medium Bus yang aman, nyaman, dan siap menemani perjalanan wisata Anda.">
 
     <link rel="stylesheet" href="style.css">
 
@@ -1359,6 +1361,16 @@
                         id="penjemputan"
                         placeholder="Masukkan lokasi penjemputan"
                         required>
+
+                    <input type="hidden" id="penjemputanKoordinat">
+                    <button type="button" id="pickupMapToggle" class="pickup-map-toggle">
+                        <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                        Pilih titik di Google Maps
+                    </button>
+                    <p id="pickupMapStatus" class="pickup-map-status" role="status" aria-live="polite">
+                        Peta memerlukan API key Google Maps Platform.
+                    </p>
+                    <div id="pickupMap" class="pickup-map" hidden aria-label="Pilih titik lokasi penjemputan di Google Maps"></div>
 
                 </div>
 
