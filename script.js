@@ -365,9 +365,41 @@ Terima kasih 🙏`;
 }
 
 
-/* ================= ANIMASI ANGKA BERGERAK (COUNTER) ================= */
+/* ================= ANIMASI ANGKA BERGERAK (COUNTER) & RESET KE 0 PER HARI ================= */
 
 document.addEventListener("DOMContentLoaded", function() {
+    // 1. Logika Pengunjung Real-Time & Reset ke 0 Per Hari
+    const visitorCounterEl = document.querySelector('.counter[data-target="1010"]');
+    
+    if (visitorCounterEl) {
+        const today = new Date().toISOString().slice(0, 10); // Format: YYYY-MM-DD
+        const lastVisitDate = localStorage.getItem("msm_visit_date");
+        
+        // Ambil jumlah pengunjung hari ini, default-nya mulai dari 0 jika belum ada/sudah ganti hari
+        let dailyVisitors = parseInt(localStorage.getItem("msm_daily_visitors")) || 0;
+
+        if (lastVisitDate !== today) {
+            // Jika sudah berganti hari, reset total pengunjung hari ini menjadi 0 (atau langsung dihitung 1 untuk pengunjung pertama)
+            localStorage.setItem("msm_visit_date", today);
+            dailyVisitors = 1; // Langsung dihitung 1 untuk pengunjung pertama hari ini
+            localStorage.setItem("msm_daily_visitors", dailyVisitors);
+            
+            // Hapus session storage agar pengunjung baru di hari ini terhitung kembali
+            sessionStorage.removeItem("has_visited_today");
+        } else {
+            // Jika masih hari yang sama dan ini tab/sesi baru browser
+            if (!sessionStorage.getItem("has_visited_today")) {
+                dailyVisitors += 1; // Tambah 1 pengunjung
+                sessionStorage.setItem("has_visited_today", "true");
+                localStorage.setItem("msm_daily_visitors", dailyVisitors);
+            }
+        }
+
+        // Ubah atribut data-target HTML secara otomatis sesuai hitungan harian
+        visitorCounterEl.setAttribute('data-target', dailyVisitors);
+    }
+
+    // 2. Animasi Counter (Angka Bergerak)
     const counters = document.querySelectorAll('.counter');
     if (counters.length === 0) return;
 
