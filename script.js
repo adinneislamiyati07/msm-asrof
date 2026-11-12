@@ -51,7 +51,10 @@ if (seatFilter && busGrid && busFilterStatus) {
         detailLink.href = `bus-detail.html?unit=${unit}`;
         detailLink.setAttribute("aria-label", `Lihat detail bus ${card.querySelector(".bus-info h3").textContent.trim()}`);
         card.prepend(detailLink);
-        card.querySelector(".detail-button").innerHTML = 'Lihat Detail <i class="fas fa-arrow-right"></i>';
+        const selectButton = card.querySelector(".detail-button");
+        selectButton.type = "button";
+        selectButton.dataset.unit = String(Number(unit));
+        selectButton.innerHTML = 'Tambah ke Form <i class="fas fa-plus"></i>';
     });
 
     seatFilter.querySelectorAll("option[value]").forEach(option => {
@@ -88,13 +91,39 @@ if (seatFilter && busGrid && busFilterStatus) {
 }
 
 function selectBus(busName) {
-    const unit = busName.match(/Unit\s+(\d+)/i)?.[1];
+    const unitMatch = busName.match(/(?:Unit\s+)?(\d+)/i);
+    const unit = unitMatch ? String(Number(unitMatch[1])) : "";
     if (!unit) {
-        console.error("Tidak dapat membuka detail bus: nomor unit tidak ditemukan.");
+        console.error("Tidak dapat memilih bus: nomor unit tidak ditemukan.");
         return;
     }
 
-    window.location.href = `bus-detail.html?unit=${unit}`;
+    if (!reservationBusList || !Array.isArray(busFleet)) {
+        window.location.href = `bus-detail.html?unit=${unit}`;
+        return;
+    }
+
+    const selects = getReservationBusSelects();
+    const selectedSelect = selects.find(select => select.value === unit);
+    if (selectedSelect) {
+        reservationForm.scrollIntoView({ behavior: "smooth" });
+        selectedSelect.focus();
+        return;
+    }
+
+    const emptySelect = selects.find(select => !select.value);
+    if (emptySelect) {
+        emptySelect.value = unit;
+        syncReservationBusOptions();
+        updateReservationPrice();
+        emptySelect.focus();
+    } else {
+        addReservationBus(unit);
+        const updatedSelects = getReservationBusSelects();
+        updatedSelects[updatedSelects.length - 1]?.focus();
+    }
+
+    reservationForm.scrollIntoView({ behavior: "smooth" });
 }
 
 
@@ -139,9 +168,37 @@ const busPriceClassBySeat = {
     59: "big"
 };
 const formatRupiah = amount => `Rp ${amount.toLocaleString("id-ID")}`;
+const reservationBusStorageKey = "msm_reservation_bus_units";
 
 function getReservationBusSelects() {
     return Array.from(reservationBusList?.querySelectorAll(".reservation-bus-select") || []);
+}
+
+function saveReservationBusSelection() {
+    const selectedUnits = [...new Set(
+        getReservationBusSelects().map(select => select.value).filter(Boolean)
+    )];
+
+    if (selectedUnits.length > 0) {
+        sessionStorage.setItem(reservationBusStorageKey, selectedUnits.join(","));
+    } else {
+        sessionStorage.removeItem(reservationBusStorageKey);
+    }
+}
+
+function syncBusCardSelection() {
+    const selectedUnits = new Set(
+        getReservationBusSelects().map(select => select.value).filter(Boolean)
+    );
+
+    busGrid?.querySelectorAll(".detail-button").forEach(button => {
+        const isSelected = selectedUnits.has(button.dataset.unit);
+        button.disabled = isSelected;
+        button.setAttribute("aria-pressed", String(isSelected));
+        button.innerHTML = isSelected
+            ? 'Sudah di Form <i class="fas fa-check" aria-hidden="true"></i>'
+            : 'Tambah ke Form <i class="fas fa-plus" aria-hidden="true"></i>';
+    });
 }
 
 function syncReservationBusOptions() {
@@ -171,6 +228,9 @@ function syncReservationBusOptions() {
     reservationBusList?.querySelectorAll(".remove-bus-button").forEach(button => {
         button.disabled = selects.length === 1;
     });
+
+    saveReservationBusSelection();
+    syncBusCardSelection();
 }
 
 function addReservationBus(unit = "") {
@@ -238,6 +298,14 @@ function updateReservationPrice() {
     reservationPriceInput.value = formatRupiah(totalPrice);
 }
 
+function resetReservationForm() {
+    reservationForm.reset();
+    reservationDurationSelect.replaceChildren(new Option("Pilih tujuan terlebih dahulu", ""));
+    reservationDurationSelect.disabled = true;
+    reservationBusList.replaceChildren();
+    addReservationBus();
+}
+
 const reservationParams = new URLSearchParams(window.location.search);
 const requestedUnit = reservationParams.get("unit");
 const requestedSeat = reservationParams.get("seat");
@@ -250,9 +318,23 @@ if (reservationBusList) {
         message.textContent = "Data armada tidak tersedia. Silakan coba lagi.";
         reservationBusList.appendChild(message);
     } else {
+        const savedUnits = sessionStorage.getItem(reservationBusStorageKey)
+            ?.split(",")
+            .filter(unit => busFleet.some(bus => String(bus.unit) === unit)) || [];
+        const selectedUnits = new Set(savedUnits);
         const requestedBus = busFleet.find(bus => String(bus.unit) === requestedUnit)
             || busFleet.find(bus => bus.seatCount === Number(requestedSeat));
-        addReservationBus(requestedBus ? String(requestedBus.unit) : "");
+
+        if (requestedBus) {
+            selectedUnits.add(String(requestedBus.unit));
+        }
+
+        if (selectedUnits.size > 0) {
+            selectedUnits.forEach(unit => addReservationBus(unit));
+        } else {
+            addReservationBus();
+        }
+
         addReservationBusButton.addEventListener("click", () => addReservationBus());
     }
 }
@@ -360,7 +442,13 @@ Terima kasih 🙏`;
         const nomorAdmin = "6281298801827"; // Ganti dengan nomor WhatsApp admin Anda
         const whatsappURL = "https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(message);
 
-        window.open(whatsappURL, "_blank");
+        const whatsappWindow = window.open(whatsappURL, "_blank");
+        if (!whatsappWindow) {
+            window.alert("WhatsApp tidak dapat dibuka. Izinkan pop-up browser, lalu kirim kembali form.");
+            return;
+        }
+
+        resetReservationForm();
     });
 }
 
