@@ -1001,7 +1001,7 @@ select {
     border-radius: 7px;
     padding: 0 15px;
     outline: none;
-    font-size: 12px;
+    font-size: 16px;
     transition: .3s;
     background: white;
     box-sizing: border-box; /* KUNCI UTAMA: Agar padding tidak menambah lebar elemen */
@@ -1031,7 +1031,8 @@ select {
 .reservation-bus-row select {
     flex: 1;
     min-width: 0;
-    height: 42px;
+    height: 46px;
+    front-size: 16px;
 }
 
 .remove-bus-button,
