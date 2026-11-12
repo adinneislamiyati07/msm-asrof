@@ -135,7 +135,102 @@ const addReservationBusButton = document.getElementById("addBusButton");
 const reservationDestinationSelect = document.getElementById("tujuan");
 const reservationDurationSelect = document.getElementById("durasi");
 const reservationPriceInput = document.getElementById("harga");
+const pickupLocationInput = document.getElementById("penjemputan");
+const pickupCoordinatesInput = document.getElementById("penjemputanKoordinat");
+const pickupMapToggle = document.getElementById("pickupMapToggle");
+const pickupMapElement = document.getElementById("pickupMap");
+const pickupMapStatus = document.getElementById("pickupMapStatus");
 const busFleet = window.busFleet;
+const googleMapsApiKey = "";
+
+let pickupMap;
+let pickupMarker;
+let pickupMapLoadPromise;
+
+function setPickupMapStatus(message) {
+    if (pickupMapStatus) pickupMapStatus.textContent = message;
+}
+
+function loadGoogleMapsApi() {
+    if (window.google?.maps) return Promise.resolve();
+    if (!googleMapsApiKey) {
+        return Promise.reject(new Error("Admin perlu menambahkan API key Google Maps Platform."));
+    }
+    if (pickupMapLoadPromise) return pickupMapLoadPromise;
+
+    pickupMapLoadPromise = new Promise((resolve, reject) => {
+        window.initPickupMap = () => {
+            pickupMap = new google.maps.Map(pickupMapElement, {
+                center: { lat: -2.5, lng: 118 },
+                zoom: 5,
+                mapTypeControl: false,
+                streetViewControl: false
+            });
+
+            pickupMap.addListener("click", event => {
+                if (!event.latLng) return;
+
+                const lat = event.latLng.lat();
+                const lng = event.latLng.lng();
+                const position = { lat, lng };
+                const coordinates = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+                if (!pickupMarker) {
+                    pickupMarker = new google.maps.Marker({ map: pickupMap, position });
+                } else {
+                    pickupMarker.setPosition(position);
+                    pickupMarker.setMap(pickupMap);
+                }
+
+                pickupCoordinatesInput.value = coordinates;
+                pickupLocationInput.value = `Titik Google Maps: ${coordinates}`;
+                setPickupMapStatus(`Titik terpilih: ${coordinates}. Klik peta untuk mengubah titik.`);
+            });
+
+            resolve();
+        };
+
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&callback=initPickupMap&v=weekly`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => {
+            pickupMapLoadPromise = null;
+            reject(new Error("Google Maps gagal dimuat. Periksa API key dan koneksi internet."));
+        };
+        document.head.appendChild(script);
+    });
+
+    return pickupMapLoadPromise;
+}
+
+pickupMapToggle?.addEventListener("click", async () => {
+    if (!googleMapsApiKey) {
+        setPickupMapStatus("Admin perlu menambahkan API key Google Maps Platform agar peta dapat digunakan.");
+        return;
+    }
+
+    pickupMapElement.hidden = false;
+    setPickupMapStatus("Memuat Google Maps...");
+
+    try {
+        await loadGoogleMapsApi();
+        setPickupMapStatus("Klik peta untuk menentukan titik penjemputan.");
+    } catch (error) {
+        setPickupMapStatus(error.message);
+    }
+});
+
+pickupLocationInput?.addEventListener("input", () => {
+    if (!pickupCoordinatesInput.value) return;
+
+    pickupCoordinatesInput.value = "";
+    if (pickupMarker) {
+        pickupMarker.setMap(null);
+        pickupMarker = null;
+    }
+    setPickupMapStatus("Lokasi berubah. Pilih ulang titik di peta agar koordinat tetap sesuai.");
+});
 
 const reservationPriceList = [
     { id: "jakarta-city", destination: "Dalam Kota, Jakarta Area (City Tour)", rates: { 1: [3400000, 2600000], 2: [5200000, 4200000] } },
@@ -300,6 +395,12 @@ function updateReservationPrice() {
 
 function resetReservationForm() {
     reservationForm.reset();
+    pickupCoordinatesInput.value = "";
+    if (pickupMarker) {
+        pickupMarker.setMap(null);
+        pickupMarker = null;
+    }
+    if (pickupMap) setPickupMapStatus("Klik peta untuk menentukan titik penjemputan.");
     reservationDurationSelect.replaceChildren(new Option("Pilih tujuan terlebih dahulu", ""));
     reservationDurationSelect.disabled = true;
     reservationBusList.replaceChildren();
@@ -384,6 +485,11 @@ if (reservationForm && reservationDestinationSelect && reservationDurationSelect
             return;
         }
 
+        if (googleMapsApiKey && !pickupCoordinatesInput.value) {
+            window.alert("Pilih titik lokasi penjemputan di Google Maps terlebih dahulu.");
+            return;
+        }
+
         /* FORMAT TANGGAL */
         const dateObject = new Date(tanggal);
         const options = {
@@ -393,6 +499,9 @@ if (reservationForm && reservationDestinationSelect && reservationDurationSelect
             day: "numeric"
         };
         const tanggalFormatted = dateObject.toLocaleDateString("id-ID", options);
+        const pickupMapLink = pickupCoordinatesInput.value
+            ? `https://www.google.com/maps?q=${encodeURIComponent(pickupCoordinatesInput.value)}`
+            : "";
 
         /* PESAN WHATSAPP */
         const message =
@@ -416,6 +525,7 @@ ${durasi} Hari
 
 🏠 *Lokasi Penjemputan*
 ${penjemputan}
+${pickupMapLink ? `📍 *Titik Google Maps*\n${pickupMapLink}\n` : ""}
 
 ⏰ *Jam Standby*
 ${jam}
