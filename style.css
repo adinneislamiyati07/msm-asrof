@@ -717,6 +717,27 @@ select {
     margin-right: 4px;
 }
 
+.bus-info > p {
+    display: none !important;
+}
+
+.bus-info > .bus-features {
+    display: none !important;
+}
+
+.bus-image {
+    height: auto !important;
+}
+
+.bus-image img {
+    height: auto !important;
+    object-fit: contain !important;
+}
+
+.bus-card:hover img {
+    transform: none !important;
+}
+
 .detail-button {
     border: none;
     background: none;
@@ -1861,7 +1882,12 @@ footer {
     }
 
     .footer-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+    }
+
+    .footer-brand {
+        grid-column: 1 / -1;
     }
 
     .client-list-header h2 {
@@ -1869,14 +1895,18 @@ footer {
     }
 
     .client-logo-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
     }
 
     .client-logo-card,
     .client-logo {
-        min-height: 100px;
-        height: 100px;
+        min-height: 88px;
+        height: 88px;
+    }
+
+    .client-logo {
+        padding: 8px;
     }
 
     .contact-section h2 {
