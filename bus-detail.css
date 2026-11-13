@@ -101,11 +101,41 @@
 }
 
 .detail-photo {
+    display: none;
     position: relative;
     min-height: 270px;
+    margin: 0;
     overflow: hidden;
     border-radius: 12px;
     background: #e7e5df;
+}
+
+.detail-gallery-card {
+    min-width: 0;
+    padding: 14px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, .05);
+}
+
+.detail-gallery-title {
+    margin: 0 0 12px;
+    color: #242424;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.detail-slider-viewport {
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.detail-photo.is-active {
+    display: block;
+}
+
+.detail-photo[hidden] {
+    display: none;
 }
 
 .detail-photo img {
@@ -140,9 +170,80 @@
     text-align: center;
 }
 
+.detail-photo-placeholder small {
+    max-width: 300px;
+    color: #929292;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
 .detail-photo-placeholder i {
     color: #b18335;
     font-size: 32px;
+}
+
+.detail-slider-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 2px 0;
+}
+
+.detail-slider-navigation {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.detail-slider-arrow,
+.detail-slider-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 0;
+    cursor: pointer;
+}
+
+.detail-slider-arrow {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f5f0e5;
+    color: #805d1e;
+}
+
+.detail-slider-arrow:hover {
+    background: #ead9b4;
+}
+
+.detail-slider-indicators {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.detail-slider-indicator {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border-radius: 50%;
+    background: #d3d0c8;
+}
+
+.detail-slider-indicator.is-active {
+    width: 20px;
+    border-radius: 8px;
+    background: #b18335;
+}
+
+.detail-slider-counter {
+    color: #777;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .detail-content-grid {
@@ -267,6 +368,10 @@
     .detail-photo img,
     .detail-photo-placeholder {
         min-height: 220px;
+    }
+
+    .detail-photo {
+        aspect-ratio: 1.35;
     }
 
     .detail-panel {
