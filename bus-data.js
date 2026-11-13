@@ -1,3 +1,20 @@
+window.busFacilities = [
+    "Full AC",
+    "Reclining Seats",
+    "Legrest",
+    "Safety Belt",
+    "USB Charging Port",
+    "LCD TV",
+    "Head Unit (Android)",
+    "Dispenser",
+    "Smoking Room",
+    "Toilet",
+    "Bagasi",
+    "Bantal",
+    "Selimut",
+    "Wireless Karaoke"
+];
+
 window.busFleet = [
     {
         "unit": 1,
@@ -795,3 +812,7 @@ window.busFleet = [
         ]
     }
 ];
+
+window.busFleet.forEach(bus => {
+    bus.facilities = window.busFacilities.slice();
+});
