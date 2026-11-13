@@ -5,33 +5,132 @@ const bus = Array.isArray(busFleet)
     ? busFleet.find(item => item.unit === requestedUnit)
     : null;
 
-function createPhoto(label, source, icon) {
-    const figure = document.createElement("figure");
-    figure.className = "detail-photo";
-    const caption = document.createElement("figcaption");
-    caption.textContent = label;
+function createPhotoGallery(label, property, icon) {
+    const configuredPhotos = bus[`${property}Photos`];
+    const photos = Array.isArray(configuredPhotos)
+        ? configuredPhotos
+        : bus[property]
+            ? [bus[property]]
+            : [];
+    const slideCount = Math.max(4, photos.length);
+    const gallery = document.createElement("section");
+    gallery.className = "detail-gallery-card";
+    gallery.setAttribute("aria-label", `Galeri foto ${label.toLowerCase()}`);
 
-    if (source) {
-        const image = document.createElement("img");
-        image.src = source;
-        image.alt = `${label} bus MSM ${String(bus.unit).padStart(3, "0")}`;
-        image.addEventListener("error", () => {
-            figure.innerHTML = "";
-            const placeholder = document.createElement("div");
-            placeholder.className = "detail-photo-placeholder";
-            placeholder.innerHTML = `<i class="${icon}" aria-hidden="true"></i><span>Foto ${label.toLowerCase()} belum tersedia.</span>`;
-            figure.replaceChildren(placeholder, caption);
-        }, { once: true });
-        figure.appendChild(image);
-    } else {
-        const placeholder = document.createElement("div");
-        placeholder.className = "detail-photo-placeholder";
-        placeholder.innerHTML = `<i class="${icon}" aria-hidden="true"></i><span>Foto ${label.toLowerCase()} belum tersedia.</span>`;
-        figure.appendChild(placeholder);
+    const title = document.createElement("h2");
+    title.className = "detail-gallery-title";
+    title.textContent = label;
+
+    const slider = document.createElement("div");
+    slider.className = "detail-slider";
+    const viewport = document.createElement("div");
+    viewport.className = "detail-slider-viewport";
+
+    const slides = Array.from({ length: slideCount }, (_, index) => {
+        const figure = document.createElement("figure");
+        figure.className = "detail-photo";
+        figure.setAttribute("aria-label", `Foto ${label.toLowerCase()} ${index + 1}`);
+        const caption = document.createElement("figcaption");
+        caption.textContent = `${label} ${index + 1}`;
+
+        const source = photos[index];
+        if (typeof source === "string" && source.trim()) {
+            const image = document.createElement("img");
+            image.src = source;
+            image.alt = `${label} bus MSM ${String(bus.unit).padStart(3, "0")} foto ${index + 1}`;
+            image.addEventListener("error", () => {
+                figure.replaceChildren(createPhotoPlaceholder(label, index, icon, property), caption);
+            }, { once: true });
+            figure.appendChild(image);
+        } else {
+            figure.appendChild(createPhotoPlaceholder(label, index, icon, property));
+        }
+
+        figure.appendChild(caption);
+        viewport.appendChild(figure);
+        return figure;
+    });
+
+    const controls = document.createElement("div");
+    controls.className = "detail-slider-controls";
+    const navigation = document.createElement("div");
+    navigation.className = "detail-slider-navigation";
+
+    const previousButton = createSliderButton(
+        "detail-slider-arrow",
+        "fa-solid fa-arrow-left",
+        `Foto ${label.toLowerCase()} sebelumnya`
+    );
+    const indicators = document.createElement("div");
+    indicators.className = "detail-slider-indicators";
+    indicators.setAttribute("role", "group");
+    indicators.setAttribute("aria-label", `Pilih foto ${label.toLowerCase()}`);
+    const nextButton = createSliderButton(
+        "detail-slider-arrow",
+        "fa-solid fa-arrow-right",
+        `Foto ${label.toLowerCase()} berikutnya`
+    );
+    const counter = document.createElement("span");
+    counter.className = "detail-slider-counter";
+    counter.setAttribute("aria-live", "polite");
+
+    let activeIndex = 0;
+    const indicatorButtons = slides.map((_, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "detail-slider-indicator";
+        button.setAttribute("aria-label", `Tampilkan foto ${label.toLowerCase()} ${index + 1}`);
+        button.addEventListener("click", () => showSlide(index));
+        indicators.appendChild(button);
+        return button;
+    });
+
+    function showSlide(index) {
+        activeIndex = (index + slideCount) % slideCount;
+        slides.forEach((slide, slideIndex) => {
+            const isActive = slideIndex === activeIndex;
+            slide.classList.toggle("is-active", isActive);
+            slide.hidden = !isActive;
+            indicatorButtons[slideIndex].classList.toggle("is-active", isActive);
+            indicatorButtons[slideIndex].setAttribute("aria-pressed", String(isActive));
+        });
+        counter.textContent = `${activeIndex + 1} / ${slideCount}`;
     }
 
-    figure.appendChild(caption);
-    return figure;
+    previousButton.addEventListener("click", () => showSlide(activeIndex - 1));
+    nextButton.addEventListener("click", () => showSlide(activeIndex + 1));
+    navigation.append(previousButton, indicators, nextButton);
+    controls.append(navigation, counter);
+    slider.append(viewport, controls);
+    gallery.append(title, slider);
+    showSlide(0);
+    return gallery;
+}
+
+function createPhotoPlaceholder(label, index, icon, property) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "detail-photo-placeholder";
+    const placeholderIcon = document.createElement("i");
+    placeholderIcon.className = icon;
+    placeholderIcon.setAttribute("aria-hidden", "true");
+    const message = document.createElement("span");
+    message.textContent = `Foto ${label.toLowerCase()} ${index + 1} belum tersedia.`;
+    const hint = document.createElement("small");
+    hint.textContent = `Tambahkan path foto ke ${property}Photos di bus-data.js.`;
+    placeholder.append(placeholderIcon, message, hint);
+    return placeholder;
+}
+
+function createSliderButton(className, iconClass, label) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = className;
+    button.setAttribute("aria-label", label);
+    const icon = document.createElement("i");
+    icon.className = iconClass;
+    icon.setAttribute("aria-hidden", "true");
+    button.appendChild(icon);
+    return button;
 }
 
 function addSpec(list, label, value) {
@@ -70,8 +169,8 @@ if (!Array.isArray(busFleet)) {
     gallery.className = "detail-gallery";
     gallery.setAttribute("aria-label", "Foto armada");
     gallery.append(
-        createPhoto("Eksterior", bus.exterior, "fa-solid fa-bus"),
-        createPhoto("Interior", bus.interior, "fa-solid fa-chair")
+        createPhotoGallery("Eksterior", "exterior", "fa-solid fa-bus"),
+        createPhotoGallery("Interior", "interior", "fa-solid fa-chair")
     );
 
     const specsPanel = document.createElement("section");
