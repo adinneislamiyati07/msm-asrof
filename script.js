@@ -38,13 +38,17 @@ if (slides.length > 0) {
 const seatFilter = document.getElementById("seatFilter");
 const busGrid = document.getElementById("busGrid");
 const busFilterStatus = document.getElementById("busFilterStatus");
+const fleetToggle = document.getElementById("fleetToggle");
 
-if (seatFilter && busGrid && busFilterStatus) {
+if (seatFilter && busGrid && busFilterStatus && fleetToggle) {
+    const featuredUnits = new Set([4, 13, 24, 37, 44, 51]);
     const busCards = Array.from(busGrid.querySelectorAll(".bus-card"));
+    const featuredCards = [];
 
     busCards.forEach(card => {
-        const unit = card.querySelector(".bus-info h3")?.textContent.match(/\d+/)?.[0];
-        if (!unit) return;
+        const unit = Number(card.querySelector(".bus-info h3")?.textContent.match(/\d+/)?.[0]);
+        if (featuredUnits.has(unit)) featuredCards.push(card);
+        card.hidden = true;
 
         const detailLink = document.createElement("a");
         detailLink.className = "bus-card-link";
@@ -53,12 +57,15 @@ if (seatFilter && busGrid && busFilterStatus) {
         card.prepend(detailLink);
         const selectButton = card.querySelector(".detail-button");
         selectButton.type = "button";
-        selectButton.dataset.unit = String(Number(unit));
+        selectButton.dataset.unit = String(unit);
         selectButton.innerHTML = 'Tambah ke Form <i class="fas fa-plus"></i>';
     });
 
     seatFilter.querySelectorAll("option[value]").forEach(option => {
-        if (!option.value) return;
+        if (!option.value) {
+            option.textContent = `Semua kapasitas (${busCards.length} bus)`;
+            return;
+        }
 
         const matchingBuses = busCards.filter(card => {
             const seatCount = card.querySelector(".seat-badge")?.textContent.match(/\d+/)?.[0];
@@ -68,26 +75,47 @@ if (seatFilter && busGrid && busFilterStatus) {
         option.textContent = `${option.value} Seat (${matchingBuses} bus)`;
     });
 
-    seatFilter.addEventListener("change", () => {
+    let showAllBuses = false;
+    function updateFleetView() {
         const selectedSeat = seatFilter.value;
+        const visibleCards = selectedSeat
+            ? busCards.filter(card => card.querySelector(".seat-badge")?.textContent.match(/\d+/)?.[0] === selectedSeat)
+            : showAllBuses
+                ? busCards
+                : featuredCards;
+        const visibleCardSet = new Set(visibleCards);
 
-        if (!selectedSeat) {
-            busGrid.hidden = true;
-            busFilterStatus.textContent = "Pilih kapasitas untuk melihat daftar armada.";
-            return;
+        busCards.forEach(card => {
+            card.hidden = !visibleCardSet.has(card);
+        });
+        busGrid.hidden = false;
+        fleetToggle.hidden = false;
+        fleetToggle.setAttribute("aria-expanded", String(showAllBuses));
+
+        if (selectedSeat) {
+            busFilterStatus.textContent = `Menampilkan ${visibleCards.length} bus dengan kapasitas ${selectedSeat} seat.`;
+        } else if (showAllBuses) {
+            busFilterStatus.textContent = `Menampilkan seluruh armada (${busCards.length} bus).`;
+        } else {
+            busFilterStatus.textContent = `Menampilkan ${featuredCards.length} pilihan dari ${busCards.length} bus.`;
         }
 
-        let visibleCount = 0;
-        busCards.forEach(card => {
-            const seatCount = card.querySelector(".seat-badge")?.textContent.match(/\d+/)?.[0];
-            const matches = seatCount === selectedSeat;
-            card.hidden = !matches;
-            if (matches) visibleCount += 1;
-        });
+        fleetToggle.querySelector("span").textContent = showAllBuses
+            ? `Tampilkan ${featuredCards.length} armada pilihan`
+            : `Lihat semua armada (${busCards.length})`;
+        fleetToggle.querySelector("i").className = showAllBuses
+            ? "fa-solid fa-arrow-up"
+            : "fa-solid fa-arrow-right";
+    }
 
-        busGrid.hidden = false;
-        busFilterStatus.textContent = `${visibleCount} bus dengan kapasitas ${selectedSeat} seat.`;
+    seatFilter.addEventListener("change", updateFleetView);
+    fleetToggle.addEventListener("click", () => {
+        showAllBuses = !showAllBuses;
+        seatFilter.value = "";
+        updateFleetView();
     });
+
+    updateFleetView();
 }
 
 function selectBus(busName) {
