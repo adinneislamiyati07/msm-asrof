@@ -170,46 +170,47 @@
 
 <!-- ================= ARMADA ================= -->
 
-<section class="armada-section" id="armada">
-
-    
+<section class="armada-section" id="armada" aria-labelledby="armadaTitle">
 
     <div class="section-heading">
 
         <div>
             <span class="small-title">PILIHAN ARMADA</span>
 
-            <h2>
+            <h2 id="armadaTitle">
                 Armada Bus
                 <span>Terbaik</span>
             </h2>
         </div>
 
         <p>
-            Pilih armada yang sesuai dengan kebutuhan
-            perjalanan rombongan Anda.
+            Temukan bus yang sesuai untuk perjalanan keluarga,
+            wisata, maupun rombongan Anda.
         </p>
 
     </div>
 
 
     <div class="bus-filter">
-        <label for="seatFilter">Pilih kapasitas seat</label>
-        <select id="seatFilter">
-            <option value="">Pilih kapasitas seat</option>
-            <option value="59">59 Seat</option>
-            <option value="50">50 Seat</option>
-            <option value="35">35 Seat</option>
-            <option value="46">46 Seat</option>
-            <option value="39">39 Seat</option>
-        </select>
-        <p id="busFilterStatus" role="status" aria-live="polite">Pilih kapasitas untuk melihat daftar armada.</p>
+        <div class="bus-filter-copy">
+            <label for="seatFilter">Cari berdasarkan kapasitas</label>
+            <p id="busFilterStatus" role="status" aria-live="polite">Menampilkan seluruh armada.</p>
+        </div>
+        <div class="bus-filter-select">
+            <i class="fa-solid fa-filter" aria-hidden="true"></i>
+            <select id="seatFilter">
+                <option value="">Semua kapasitas</option>
+                <option value="59">59 Seat</option>
+                <option value="50">50 Seat</option>
+                <option value="35">35 Seat</option>
+                <option value="46">46 Seat</option>
+                <option value="39">39 Seat</option>
+            </select>
+        </div>
     </div>
 
-    <div class="bus-grid">
-
-
-        <div class="bus-grid" id="busGrid" hidden>
+    <div class="armada-content">
+        <div class="bus-grid" id="busGrid">
 
     <!-- BUS 1 -->
     <div class="bus-card">
@@ -1165,14 +1166,18 @@
         </div>
     </div>
 
-</div>
-<div class="info-aman">
-    <h3>Aman & Terawat</h3>
-    <p>
-        Armada selalu dirawat dan
-        diperiksa sebelum perjalanan.
-    </p>
-</div>        </div>
+        </div>
+    <button class="fleet-toggle-button" id="fleetToggle" type="button" aria-expanded="false">
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        <span>Lihat semua armada (53)</span>
+    </button>
+        <div class="info-aman">
+            <span class="info-aman-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
+            <div>
+                <h3>Aman &amp; Terawat</h3>
+                <p>Armada selalu dirawat dan diperiksa sebelum perjalanan.</p>
+            </div>
+        </div>
 
     </div>
 
