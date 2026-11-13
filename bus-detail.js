@@ -83,11 +83,10 @@ if (!Array.isArray(busFleet)) {
     addSpec(specs, "Tahun unit", bus.year);
     addSpec(specs, "Merek unit", bus.brand);
     addSpec(specs, "Kapasitas", `${bus.seatCount} seat`);
-    specsPanel.appendChild(specs);
 
     const facilitiesPanel = document.createElement("section");
-    facilitiesPanel.className = "detail-panel";
-    facilitiesPanel.innerHTML = "<h2>Fasilitas</h2>";
+    facilitiesPanel.className = "detail-facilities-section";
+    facilitiesPanel.innerHTML = "<h3>Fasilitas</h3>";
     const facilities = document.createElement("ul");
     facilities.className = "detail-facilities";
     bus.facilities.forEach(name => {
@@ -96,10 +95,11 @@ if (!Array.isArray(busFleet)) {
         facilities.appendChild(item);
     });
     facilitiesPanel.appendChild(facilities);
+    specsPanel.append(specs, facilitiesPanel);
 
     const content = document.createElement("div");
     content.className = "detail-content-grid";
-    content.append(specsPanel, facilitiesPanel);
+    content.appendChild(specsPanel);
 
     const reserveLink = document.createElement("a");
     reserveLink.className = "detail-reserve-button";
