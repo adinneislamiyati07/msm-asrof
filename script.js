@@ -110,9 +110,14 @@ if (seatFilter && busGrid && busFilterStatus && fleetToggle) {
 
     seatFilter.addEventListener("change", updateFleetView);
     fleetToggle.addEventListener("click", () => {
+        const isCollapsingFleet = showAllBuses;
         showAllBuses = !showAllBuses;
         seatFilter.value = "";
         updateFleetView();
+
+        if (isCollapsingFleet) {
+            document.getElementById("armada")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
     });
 
     updateFleetView();
