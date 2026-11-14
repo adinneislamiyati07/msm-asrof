@@ -472,7 +472,7 @@ Terima kasih 🙏`;
 
         /* NOMOR ADMIN & KIRIM */
         const nomorAdmin = "6281298801827"; // Ganti dengan nomor WhatsApp admin Anda
-        const whatsappURL = "https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(message);
+        const whatsappURL = "https://api.whatsapp.com/send?phone=" + nomorAdmin + "&text=" + encodeURIComponent(message);
 
         const whatsappWindow = window.open(whatsappURL, "_blank");
         if (!whatsappWindow) {
@@ -561,4 +561,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
         observer.observe(statsSection);
     }
+});
+
+
+document.getElementById("floatingWA").addEventListener("click", function(e) {
+    e.preventDefault();
+    const nomorAdmin = "6281298801827";
+    
+    // Pesan dengan emoji aman menggunakan String.fromCodePoint
+    const pesan = [
+        "Halo Admin PT. Asyrof Fadel Ali | MSM ASYROF ",
+        String.fromCodePoint(0x1F44B),
+        ". Saya ingin berkonsultasi mengenai informasi penyewaan bus pariwisata ",
+        String.fromCodePoint(0x1F68C),
+        ". Terima kasih ",
+        String.fromCodePoint(0x1F64F, 0x1F64F),
+        "."
+    ].join("");
+
+    const waURL = "https://api.whatsapp.com/send?phone=" + nomorAdmin + "&text=" + encodeURIComponent(pesan);
+    window.open(waURL, "_blank");
 });
