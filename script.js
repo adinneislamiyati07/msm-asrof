@@ -1,3 +1,7 @@
+import { db } from "./firebase.js";
+import { collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getBookedBusUnits } from "./bus-availability.js";
+
 /* ================= MOBILE MENU ================= */
 
 const menuButton = document.getElementById("menuButton");
@@ -53,6 +57,7 @@ if (seatFilter && busGrid && busFilterStatus && fleetToggle) {
         const detailLink = document.createElement("a");
         detailLink.className = "bus-card-link";
         detailLink.href = `bus-detail.html?unit=${unit}`;
+        detailLink.dataset.unit = String(unit);
         detailLink.setAttribute("aria-label", `Lihat detail bus ${card.querySelector(".bus-info h3").textContent.trim()}`);
         card.prepend(detailLink);
         const selectButton = card.querySelector(".detail-button");
@@ -130,9 +135,13 @@ function selectBus(busName) {
         console.error("Tidak dapat memilih bus: nomor unit tidak ditemukan.");
         return;
     }
+    if (isUnitUnavailable(unit)) {
+        window.alert("Unit bus ini sedang Booked atau ketersediaannya belum dapat diverifikasi.");
+        return;
+    }
 
     if (!reservationBusList || !Array.isArray(busFleet)) {
-        window.location.href = `bus-detail.html?unit=${unit}`;
+        window.location.href = getBusDetailHref(unit);
         return;
     }
 
@@ -159,6 +168,8 @@ function selectBus(busName) {
     reservationForm.scrollIntoView({ behavior: "smooth" });
 }
 
+window.selectBus = selectBus;
+
 
 /* ================= RESERVASI FORM (WHATSAPP) ================= */
 
@@ -168,6 +179,8 @@ const addReservationBusButton = document.getElementById("addBusButton");
 const reservationDestinationSelect = document.getElementById("tujuan");
 const reservationDurationSelect = document.getElementById("durasi");
 const reservationPriceInput = document.getElementById("harga");
+const reservationDateInput = document.getElementById("tanggal");
+const availabilityStatus = document.getElementById("reservationAvailabilityStatus");
 const busFleet = window.busFleet;
 
 const reservationPriceList = [
@@ -202,6 +215,74 @@ const busPriceClassBySeat = {
 };
 const formatRupiah = amount => `Rp ${amount.toLocaleString("id-ID")}`;
 const reservationBusStorageKey = "msm_reservation_bus_units";
+const reservationDateStorageKey = "msm_reservation_date";
+const reservationDurationStorageKey = "msm_reservation_duration";
+const reservationDestinationStorageKey = "msm_reservation_destination";
+let bookedTrips = [];
+let reservationsLoaded = false;
+let availabilityError = false;
+let availabilityErrorCode = "";
+
+function getBookedUnits() {
+    return getBookedBusUnits(
+        bookedTrips,
+        reservationDateInput?.value,
+        reservationDurationSelect?.value
+    );
+}
+
+function getBusDetailHref(unit) {
+    const params = new URLSearchParams({ unit: String(unit) });
+    const date = reservationDateInput?.value || sessionStorage.getItem(reservationDateStorageKey);
+    const destination = reservationDestinationSelect?.value || sessionStorage.getItem(reservationDestinationStorageKey);
+    const duration = reservationDurationSelect?.value || sessionStorage.getItem(reservationDurationStorageKey);
+
+    if (date) params.set("date", date);
+    if (destination) params.set("tujuan", destination);
+    if (duration) params.set("durasi", duration);
+    return `bus-detail.html?${params.toString()}`;
+}
+
+function syncBusDetailLinks() {
+    busGrid?.querySelectorAll(".bus-card-link").forEach(link => {
+        link.href = getBusDetailHref(link.dataset.unit);
+    });
+}
+
+function saveReservationSchedule() {
+    const date = reservationDateInput?.value;
+    const destination = reservationDestinationSelect?.value;
+    const duration = reservationDurationSelect?.value;
+
+    if (date) sessionStorage.setItem(reservationDateStorageKey, date);
+    else sessionStorage.removeItem(reservationDateStorageKey);
+    if (destination) sessionStorage.setItem(reservationDestinationStorageKey, destination);
+    else sessionStorage.removeItem(reservationDestinationStorageKey);
+    if (duration) sessionStorage.setItem(reservationDurationStorageKey, duration);
+    else sessionStorage.removeItem(reservationDurationStorageKey);
+    syncBusDetailLinks();
+}
+
+function isUnitUnavailable(unit, bookedUnits = getBookedUnits()) {
+    return !reservationsLoaded || availabilityError || bookedUnits.has(String(unit));
+}
+
+function updateAvailabilityStatus(bookedUnits) {
+    if (!availabilityStatus) return;
+    if (availabilityError) {
+        availabilityStatus.textContent = availabilityErrorCode === "permission-denied"
+            ? "Akses ketersediaan ditolak. Publikasikan firestore.rules di Firebase, lalu muat ulang halaman."
+            : "Ketersediaan bus gagal dimuat. Periksa koneksi Firebase, lalu muat ulang halaman.";
+    } else if (!reservationsLoaded) {
+        availabilityStatus.textContent = "Memuat ketersediaan bus...";
+    } else if (!reservationDateInput?.value) {
+        availabilityStatus.textContent = "Pilih tanggal perjalanan untuk melihat ketersediaan bus.";
+    } else if (bookedUnits.size > 0) {
+        availabilityStatus.textContent = `${bookedUnits.size} unit bus tidak tersedia pada jadwal ini.`;
+    } else {
+        availabilityStatus.textContent = "Unit bus tersedia pada tanggal yang dipilih.";
+    }
+}
 
 function getReservationBusSelects() {
     return Array.from(reservationBusList?.querySelectorAll(".reservation-bus-select") || []);
@@ -220,22 +301,33 @@ function saveReservationBusSelection() {
 }
 
 function syncBusCardSelection() {
+    const bookedUnits = getBookedUnits();
     const selectedUnits = new Set(
         getReservationBusSelects().map(select => select.value).filter(Boolean)
     );
 
     busGrid?.querySelectorAll(".detail-button").forEach(button => {
         const isSelected = selectedUnits.has(button.dataset.unit);
-        button.disabled = isSelected;
+        const isBooked = bookedUnits.has(button.dataset.unit);
+        const isLoading = !reservationsLoaded && !availabilityError;
+        const isUnavailable = isBooked || isLoading || availabilityError;
+        button.disabled = isSelected || isUnavailable;
         button.setAttribute("aria-pressed", String(isSelected));
-        button.innerHTML = isSelected
-            ? 'Sudah di Form <i class="fas fa-check" aria-hidden="true"></i>'
-            : 'Tambah ke Form <i class="fas fa-plus" aria-hidden="true"></i>';
+        button.innerHTML = isBooked
+            ? 'Booked <i class="fas fa-ban" aria-hidden="true"></i>'
+            : isSelected
+                ? 'Sudah di Form <i class="fas fa-check" aria-hidden="true"></i>'
+                : availabilityError
+                    ? 'Ketersediaan gagal dimuat'
+                    : isLoading
+                    ? 'Memuat ketersediaan'
+                    : 'Tambah ke Form <i class="fas fa-plus" aria-hidden="true"></i>';
     });
 }
 
 function syncReservationBusOptions() {
     const selects = getReservationBusSelects();
+    const bookedUnits = getBookedUnits();
     const selectedUnits = selects.map(select => select.value || select.dataset.requestedUnit || "").filter(Boolean);
 
     selects.forEach(select => {
@@ -245,7 +337,22 @@ function syncReservationBusOptions() {
 
         busFleet.forEach(bus => {
             if (!unavailableUnits.has(String(bus.unit))) {
-                select.add(new Option(`${bus.name} (${bus.seatCount} Seat)`, bus.unit));
+                const isBooked = bookedUnits.has(String(bus.unit));
+                const isLoading = !reservationsLoaded && !availabilityError;
+                const isUnavailable = isLoading || availabilityError || isBooked;
+                const availabilityLabel = isBooked
+                    ? " - Booked"
+                    : availabilityError
+                        ? " - Ketersediaan gagal dimuat"
+                        : isLoading
+                            ? " - Memuat ketersediaan"
+                            : "";
+                const option = new Option(
+                    `${bus.name} (${bus.seatCount} Seat)${availabilityLabel}`,
+                    bus.unit
+                );
+                option.disabled = isUnavailable;
+                select.add(option);
             }
         });
 
@@ -253,7 +360,7 @@ function syncReservationBusOptions() {
         delete select.dataset.requestedUnit;
     });
 
-    const canAddBus = selects.length < busFleet.length;
+    const canAddBus = selects.length < busFleet.length && reservationsLoaded && !availabilityError;
     if (addReservationBusButton) {
         addReservationBusButton.disabled = !canAddBus;
     }
@@ -264,6 +371,7 @@ function syncReservationBusOptions() {
 
     saveReservationBusSelection();
     syncBusCardSelection();
+    updateAvailabilityStatus(bookedUnits);
 }
 
 function addReservationBus(unit = "") {
@@ -302,7 +410,9 @@ function getReservationBusPrices() {
     const duration = Number(reservationDurationSelect?.value);
     const selects = getReservationBusSelects();
 
-    if (!route || !duration || selects.length === 0 || selects.some(select => !select.value)) {
+    if (!route || !duration || selects.length === 0 || selects.some(select =>
+        !select.value || isUnitUnavailable(select.value)
+    )) {
         return null;
     }
 
@@ -333,15 +443,26 @@ function updateReservationPrice() {
 
 function resetReservationForm() {
     reservationForm.reset();
+    sessionStorage.removeItem(reservationDateStorageKey);
+    sessionStorage.removeItem(reservationDurationStorageKey);
+    sessionStorage.removeItem(reservationDestinationStorageKey);
     reservationDurationSelect.replaceChildren(new Option("Pilih tujuan terlebih dahulu", ""));
     reservationDurationSelect.disabled = true;
     reservationBusList.replaceChildren();
     addReservationBus();
+    syncBusDetailLinks();
 }
 
 const reservationParams = new URLSearchParams(window.location.search);
 const requestedUnit = reservationParams.get("unit");
 const requestedSeat = reservationParams.get("seat");
+const requestedDate = reservationParams.get("date") || sessionStorage.getItem(reservationDateStorageKey) || "";
+const requestedDestination = reservationParams.get("tujuan") || sessionStorage.getItem(reservationDestinationStorageKey) || "";
+const requestedDuration = reservationParams.get("durasi") || sessionStorage.getItem(reservationDurationStorageKey) || "";
+
+if (reservationDateInput && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+    reservationDateInput.value = requestedDate;
+}
 
 if (reservationBusList) {
     if (!Array.isArray(busFleet)) {
@@ -372,6 +493,23 @@ if (reservationBusList) {
     }
 }
 
+if (reservationBusList && Array.isArray(busFleet)) {
+    onSnapshot(collection(db, "busAvailability"), snapshot => {
+        bookedTrips = snapshot.docs.map(documentSnapshot => documentSnapshot.data());
+        reservationsLoaded = true;
+        availabilityError = false;
+        availabilityErrorCode = "";
+        syncReservationBusOptions();
+        updateReservationPrice();
+    }, error => {
+        console.error("Gagal memuat ketersediaan bus:", error);
+        availabilityError = true;
+        availabilityErrorCode = error.code || "";
+        reservationsLoaded = true;
+        syncReservationBusOptions();
+    });
+}
+
 if (reservationForm && reservationDestinationSelect && reservationDurationSelect) {
     reservationPriceList.forEach(route => {
         reservationDestinationSelect.add(new Option(route.destination, route.id));
@@ -391,14 +529,34 @@ if (reservationForm && reservationDestinationSelect && reservationDurationSelect
         }
 
         reservationDurationSelect.disabled = !route;
+        if (route && reservationDestinationSelect.value === requestedDestination && requestedDuration) {
+            reservationDurationSelect.value = requestedDuration;
+        }
+        saveReservationSchedule();
+        syncReservationBusOptions();
         updateReservationPrice();
     });
 
-    [reservationDurationSelect].forEach(input => {
-        input?.addEventListener("change", updateReservationPrice);
+    reservationDateInput?.addEventListener("change", () => {
+        saveReservationSchedule();
+        syncReservationBusOptions();
+        updateReservationPrice();
+    });
+    reservationDurationSelect.addEventListener("change", () => {
+        saveReservationSchedule();
+        syncReservationBusOptions();
+        updateReservationPrice();
     });
 
-    reservationForm.addEventListener("submit", function(event) {
+    if (reservationPriceList.some(route => route.id === requestedDestination)) {
+        reservationDestinationSelect.value = requestedDestination;
+        reservationDestinationSelect.dispatchEvent(new Event("change"));
+    } else {
+        saveReservationSchedule();
+    }
+    syncBusDetailLinks();
+
+    reservationForm.addEventListener("submit", async function(event) {
         event.preventDefault();
 
         const nama = document.getElementById("nama").value;
@@ -412,21 +570,29 @@ if (reservationForm && reservationDestinationSelect && reservationDurationSelect
         const route = reservationPriceList.find(item => item.id === tujuan);
         const busPrices = getReservationBusPrices();
 
+        if (!reservationsLoaded || availabilityError) {
+            window.alert("Ketersediaan bus belum dapat diverifikasi. Silakan muat ulang halaman.");
+            return;
+        }
         if (!route || !busPrices || !harga) {
             window.alert("Pilih tujuan, durasi, dan harga yang tersedia untuk setiap unit bus.");
             return;
         }
 
-        /* FORMAT TANGGAL */
-        const dateObject = new Date(tanggal);
-        const options = {
+        const bookedUnits = getBookedUnits();
+        if (busPrices.some(({ bus }) => bookedUnits.has(String(bus.unit)))) {
+            window.alert("Salah satu unit bus sudah Booked pada jadwal ini. Silakan pilih unit lain.");
+            syncReservationBusOptions();
+            return;
+        }
+
+        const dateObject = new Date(`${tanggal}T00:00:00`);
+        const tanggalFormatted = dateObject.toLocaleDateString("id-ID", {
             weekday: "long",
             year: "numeric",
             month: "long",
             day: "numeric"
-        };
-        const tanggalFormatted = dateObject.toLocaleDateString("id-ID", options);
-        /* PESAN WHATSAPP */
+        });
         const message =
 `🚌 *PT. AFA WISATA | MSM ASYROF*
 
@@ -470,16 +636,37 @@ Mohon informasi ketersediaan unit dan konfirmasi reservasi.
 
 Terima kasih 🙏`;
 
-        /* NOMOR ADMIN & KIRIM */
-        const nomorAdmin = "6281298801827"; // Ganti dengan nomor WhatsApp admin Anda
-        const whatsappURL = "https://api.whatsapp.com/send?phone=" + nomorAdmin + "&text=" + encodeURIComponent(message);
-
-        const whatsappWindow = window.open(whatsappURL, "_blank");
+        const whatsappWindow = window.open("about:blank", "_blank");
         if (!whatsappWindow) {
             window.alert("WhatsApp tidak dapat dibuka. Izinkan pop-up browser, lalu kirim kembali form.");
             return;
         }
 
+        try {
+            await addDoc(collection(db, "reservations"), {
+                nama: nama.trim(),
+                tanggal,
+                tujuan: route.destination,
+                durasi,
+                penjemputan: penjemputan.trim(),
+                jam,
+                telepon: telepon.trim(),
+                buses: busPrices.map(({ bus }) => `${bus.name} (${bus.seatCount} Seat)`),
+                busUnits: busPrices.map(({ bus }) => bus.unit),
+                harga,
+                status: "pending",
+                createdAt: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Gagal menyimpan reservasi ke database:", error);
+            whatsappWindow.close();
+            window.alert("Terjadi kesalahan saat menyimpan reservasi. Silakan coba lagi.");
+            return;
+        }
+
+        const nomorAdmin = "6281298801827";
+        const whatsappURL = "https://api.whatsapp.com/send?phone=" + nomorAdmin + "&text=" + encodeURIComponent(message);
+        whatsappWindow.location.href = whatsappURL;
         resetReservationForm();
     });
 }
