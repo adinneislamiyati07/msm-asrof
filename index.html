@@ -45,8 +45,8 @@
         <a href="#kontak">Kontak</a>
     </nav>
 
-    <a href="#reservasi" class="nav-button">
-        Reservasi
+    <a href="login.html" class="nav-button" aria-label="Login Super Admin">
+        Login
     </a>
 
     <button class="menu-button" id="menuButton">
@@ -576,17 +576,17 @@
     <div class="bus-card">
         <div class="bus-image">
             <img src="images/msm021.jpeg" alt="Bus Pariwisata Unit 21" onerror="this.src='https://via.placeholder.com/400x230?text=Foto+Bus+21'">
-            <span class="seat-badge">50 SEAT</span>
+            <span class="seat-badge">59 SEAT</span>
         </div>
         <div class="bus-info">
             <h3>MSM 021</h3>
-            <p>Armada prima dan nyaman dengan kapasitas 50 seat siap melayani perjalanan Anda.</p>
+            <p>Armada prima dan nyaman dengan kapasitas 59 seat siap melayani perjalanan Anda.</p>
             <div class="bus-features">
                 <span><i class="fas fa-snowflake"></i> AC</span>
                 <span><i class="fas fa-tv"></i> TV</span>
                 <span><i class="fas fa-wifi"></i> WiFi</span>
             </div>
-            <button class="detail-button" onclick="selectBus('Bus Pariwisata Unit 21 (50 Seat)')">Pilih Armada <i class="fas fa-arrow-right"></i></button>
+            <button class="detail-button" onclick="selectBus('Bus Pariwisata Unit 21 (59 Seat)')">Pilih Armada <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -989,7 +989,7 @@
     <!-- BUS 45 -->
     <div class="bus-card">
         <div class="bus-image">
-            <img src="images/busmsm45.png" alt="Bus Pariwisata Unit 45" onerror="this.src='https://via.placeholder.com/400x230?text=Foto+Bus+45'">
+            <img src="images/msm045.jpeg" alt="Bus Pariwisata Unit 45" onerror="this.src='https://via.placeholder.com/400x230?text=Foto+Bus+45'">
             <span class="seat-badge">50 SEAT</span>
         </div>
         <div class="bus-info">
@@ -1025,7 +1025,7 @@
     <!-- BUS 47 -->
     <div class="bus-card">
         <div class="bus-image">
-            <img src="images/bus-47.jpg" alt="Bus Pariwisata Unit 47" onerror="this.src='https://via.placeholder.com/400x230?text=Foto+Bus+47'">
+            <img src="images/msm047.jpeg" alt="Bus Pariwisata Unit 47" onerror="this.src='https://via.placeholder.com/400x230?text=Foto+Bus+47'">
             <span class="seat-badge">50 SEAT</span>
         </div>
         <div class="bus-info">
@@ -1043,7 +1043,7 @@
     <!-- BUS 48 -->
     <div class="bus-card">
         <div class="bus-image">
-            <img src="images/busmsm48.png" alt="Bus Pariwisata Unit 48" onerror="this.src='https://via.placeholder.com/400x230?text=Foto+Bus+48'">
+            <img src="images/msm048.jpeg" alt="Bus Pariwisata Unit 48" onerror="this.src='https://via.placeholder.com/400x230?text=Foto+Bus+48'">
             <span class="seat-badge">50 SEAT</span>
         </div>
         <div class="bus-info">
@@ -1401,6 +1401,7 @@
                     </label>
 
                     <div id="busList" class="reservation-bus-list"></div>
+                    <p id="reservationAvailabilityStatus" role="status" aria-live="polite"></p>
                     <button type="button" id="addBusButton" class="add-bus-button">
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>
                         Tambah unit bus
@@ -2176,7 +2177,7 @@ Yang pasti nya harga cocok, bus nya bagus dan pelayanannya terbaik
 
 
 <script src="bus-data.js"></script>
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 
 </body>
 </html>
