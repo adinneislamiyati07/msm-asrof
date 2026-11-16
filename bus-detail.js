@@ -1,6 +1,17 @@
+import { db } from "./firebase.js";
+import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getBookedBusUnits } from "./bus-availability.js";
+
 const detailRoot = document.getElementById("busDetail");
-const requestedUnit = Number(new URLSearchParams(window.location.search).get("unit"));
+const detailParams = new URLSearchParams(window.location.search);
+const requestedUnit = Number(detailParams.get("unit"));
 const busFleet = window.busFleet;
+const reservationDateStorageKey = "msm_reservation_date";
+const reservationDurationStorageKey = "msm_reservation_duration";
+const reservationDestinationStorageKey = "msm_reservation_destination";
+let bookedTrips = [];
+let availabilityState = "loading";
+let availabilityErrorCode = "";
 const bus = Array.isArray(busFleet)
     ? busFleet.find(item => item.unit === requestedUnit)
     : null;
@@ -202,10 +213,106 @@ if (!Array.isArray(busFleet)) {
 
     const reserveLink = document.createElement("a");
     reserveLink.className = "detail-reserve-button";
-    reserveLink.href = `index.html?unit=${bus.unit}#reservasi`;
-    reserveLink.setAttribute("aria-label", `Tambah ${bus.name} ke form reservasi`);
-    reserveLink.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah ke Form';
-    facilitiesPanel.appendChild(reserveLink);
+    const availabilityPanel = document.createElement("div");
+    availabilityPanel.className = "detail-availability";
+
+    const dateLabel = document.createElement("label");
+    dateLabel.htmlFor = "detailTravelDate";
+    dateLabel.textContent = "Tanggal perjalanan";
+    const dateInput = document.createElement("input");
+    dateInput.id = "detailTravelDate";
+    dateInput.type = "date";
+    dateInput.setAttribute("aria-label", "Pilih tanggal perjalanan untuk cek ketersediaan");
+    const requestedDate = detailParams.get("date") || sessionStorage.getItem(reservationDateStorageKey) || "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+        dateInput.value = requestedDate;
+    }
+
+    const availabilityMessage = document.createElement("p");
+    availabilityMessage.className = "detail-availability-message";
+    availabilityMessage.setAttribute("role", "status");
+
+    function updateReserveLink(label, isDisabled, isBooked = false) {
+        reserveLink.innerHTML = label;
+        reserveLink.classList.toggle("is-disabled", isDisabled);
+        reserveLink.classList.toggle("is-booked", isBooked);
+        reserveLink.setAttribute("aria-disabled", String(isDisabled));
+        reserveLink.setAttribute("aria-label", isBooked
+            ? `${bus.name} Booked pada tanggal yang dipilih`
+            : isDisabled
+                ? `Pilih tanggal perjalanan untuk ${bus.name}`
+                : `Tambah ${bus.name} ke form reservasi`);
+        if (isDisabled) {
+            reserveLink.removeAttribute("href");
+        } else {
+            const params = new URLSearchParams({ unit: String(bus.unit), date: dateInput.value });
+            const destination = detailParams.get("tujuan") || sessionStorage.getItem(reservationDestinationStorageKey);
+            const duration = detailParams.get("durasi") || sessionStorage.getItem(reservationDurationStorageKey) || "1";
+            if (destination) params.set("tujuan", destination);
+            params.set("durasi", duration);
+            reserveLink.href = `index.html?${params.toString()}#reservasi`;
+        }
+    }
+
+    function updateAvailability() {
+        if (availabilityState === "loading") {
+            updateReserveLink('<i class="fa-solid fa-spinner" aria-hidden="true"></i> Memuat ketersediaan', true);
+            availabilityMessage.textContent = "Memuat ketersediaan bus...";
+            return;
+        }
+        if (availabilityState === "error") {
+            updateReserveLink("Ketersediaan gagal dimuat", true);
+            availabilityMessage.textContent = availabilityErrorCode === "permission-denied"
+                ? "Akses ketersediaan ditolak. Publikasikan firestore.rules di Firebase, lalu muat ulang halaman."
+                : "Ketersediaan bus gagal dimuat. Periksa koneksi, lalu muat ulang halaman.";
+            return;
+        }
+        if (!dateInput.value) {
+            updateReserveLink("Pilih tanggal perjalanan", true);
+            availabilityMessage.textContent = "Pilih tanggal perjalanan untuk melihat status unit.";
+            return;
+        }
+
+        const duration = detailParams.get("durasi") || sessionStorage.getItem(reservationDurationStorageKey) || "1";
+        const isBooked = getBookedBusUnits(bookedTrips, dateInput.value, duration).has(String(bus.unit));
+        const formattedDate = new Date(`${dateInput.value}T00:00:00`).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+
+        if (isBooked) {
+            updateReserveLink('<i class="fa-solid fa-ban" aria-hidden="true"></i> Booked', true, true);
+            availabilityMessage.textContent = `Unit ini sudah Booked pada ${formattedDate}.`;
+        } else {
+            updateReserveLink('<i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah ke Form', false);
+            availabilityMessage.textContent = `Unit tersedia pada ${formattedDate}.`;
+        }
+    }
+
+    dateInput.addEventListener("change", () => {
+        if (dateInput.value) {
+            sessionStorage.setItem(reservationDateStorageKey, dateInput.value);
+        } else {
+            sessionStorage.removeItem(reservationDateStorageKey);
+        }
+        updateAvailability();
+    });
+
+    availabilityPanel.append(dateLabel, dateInput, availabilityMessage, reserveLink);
+    facilitiesPanel.appendChild(availabilityPanel);
 
     detailRoot.replaceChildren(heading, gallery, content);
+
+    onSnapshot(collection(db, "busAvailability"), snapshot => {
+        bookedTrips = snapshot.docs.map(documentSnapshot => documentSnapshot.data());
+        availabilityState = "ready";
+        availabilityErrorCode = "";
+        updateAvailability();
+    }, error => {
+        console.error("Gagal memuat ketersediaan bus:", error);
+        availabilityState = "error";
+        availabilityErrorCode = error.code || "";
+        updateAvailability();
+    });
 }
