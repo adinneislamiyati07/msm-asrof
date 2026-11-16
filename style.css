@@ -619,6 +619,12 @@ select {
     color: #d4a359 !important;
 }
 
+.detail-button:disabled {
+    color: #888 !important;
+    cursor: not-allowed !important;
+    opacity: .7;
+}
+
 .bus-card {
     background: white;
 
@@ -1068,6 +1074,12 @@ select {
 .reservation-bus-list {
     display: grid;
     gap: 8px;
+}
+
+#reservationAvailabilityStatus {
+    margin: 8px 0;
+    color: #666;
+    font-size: 12px;
 }
 
 .reservation-bus-row {
