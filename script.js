@@ -8,13 +8,22 @@ const menuButton = document.getElementById("menuButton");
 const navMenu = document.getElementById("navMenu");
 
 if (menuButton && navMenu) {
+    const menuIcon = menuButton.querySelector("i");
     menuButton.addEventListener("click", () => {
-        navMenu.classList.toggle("active");
+        const isExpanded = navMenu.classList.toggle("active");
+        menuButton.setAttribute("aria-expanded", String(isExpanded));
+        menuButton.setAttribute("aria-label", isExpanded ? "Tutup menu" : "Buka menu");
+        menuIcon?.classList.toggle("fa-bars", !isExpanded);
+        menuIcon?.classList.toggle("fa-xmark", isExpanded);
     });
 
     document.querySelectorAll("#navMenu a").forEach(link => {
         link.addEventListener("click", () => {
             navMenu.classList.remove("active");
+            menuButton.setAttribute("aria-expanded", "false");
+            menuButton.setAttribute("aria-label", "Buka menu");
+            menuIcon?.classList.add("fa-bars");
+            menuIcon?.classList.remove("fa-xmark");
         });
     });
 }
