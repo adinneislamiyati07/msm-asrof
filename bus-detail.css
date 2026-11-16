@@ -342,6 +342,57 @@
     background: #e0b75f;
 }
 
+.detail-availability {
+    display: grid;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.detail-availability label {
+    color: #555;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.detail-availability input {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    border: 1px solid #dedbd4;
+    border-radius: 6px;
+    background: #fff;
+    color: #222;
+    font: inherit;
+}
+
+.detail-availability input:focus {
+    border-color: #b18335;
+    outline: 2px solid rgba(177, 131, 53, .2);
+}
+
+.detail-availability-message {
+    margin: 0;
+    color: #666;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.detail-reserve-button.is-disabled {
+    background: #e7e5df;
+    color: #666;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.detail-reserve-button.is-booked {
+    background: #eee2e2;
+    color: #8d2929;
+}
+
+.detail-availability .detail-reserve-button {
+    margin-top: 0;
+}
+
 @media (max-width: 700px) {
     .detail-navbar {
         align-items: flex-start;
