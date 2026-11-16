@@ -1771,6 +1771,82 @@ footer {
 
 }
 
+@media (max-width: 900px) {
+    .navbar {
+        gap: 10px;
+        padding: 0 5%;
+    }
+
+    .logo {
+        flex: 1;
+        min-width: 0;
+        gap: 9px;
+    }
+
+    .logo-icon {
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
+    }
+
+    .logo h2 {
+        font-size: clamp(13px, 1.8vw, 16px);
+        letter-spacing: .5px;
+        white-space: nowrap;
+    }
+
+    .logo span {
+        font-size: 8px;
+        letter-spacing: 1.5px;
+    }
+
+    .navbar nav {
+        display: none;
+    }
+
+    .navbar nav.active {
+        position: absolute;
+        top: 82px;
+        left: 0;
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        gap: 0;
+        padding: 8px 5% 16px;
+        background: #111;
+        box-shadow: 0 12px 20px rgba(0, 0, 0, .2);
+    }
+
+    .navbar nav.active a {
+        padding: 13px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, .1);
+        font-size: 14px;
+    }
+
+    .navbar nav.active a:last-child {
+        border-bottom: 0;
+    }
+
+    .nav-button {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 15px;
+        white-space: nowrap;
+    }
+
+    .menu-button {
+        display: inline-flex;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+    }
+}
 
 @media (max-width: 800px) {
 
@@ -1778,32 +1854,25 @@ footer {
         padding: 0 5%;
     }
 
-    .navbar nav,
-    .nav-button {
+    .navbar nav {
         display: none;
     }
 
     .menu-button {
-        display: block;
+        display: inline-flex;
     }
 
-    .navbar nav.active {
-        position: absolute;
+    .vision-mission {
+        padding: 55px 5%;
+    }
 
-        display: flex;
-
-        flex-direction: column;
-
+    .vision-mission-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 20px;
+    }
 
-        top: 82px;
-        left: 0;
-
-        width: 100%;
-
-        padding: 25px;
-
-        background: #111;
+    .vm-card {
+        padding: 30px 22px;
     }
 
     .hero-content {
@@ -1849,8 +1918,60 @@ footer {
 
 }
 
+@media (max-width: 380px) {
+    .navbar {
+        gap: 7px;
+        padding: 0 12px;
+    }
+
+    .logo {
+        gap: 7px;
+    }
+
+    .logo-icon {
+        flex-basis: 32px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .logo h2 {
+        font-size: 12px;
+        letter-spacing: 0;
+    }
+
+    .logo span {
+        font-size: 7px;
+        letter-spacing: 1.2px;
+    }
+
+    .nav-button {
+        padding: 9px 10px;
+        font-size: 10px;
+    }
+
+    .menu-button {
+        flex-basis: 34px;
+        width: 34px;
+        height: 38px;
+        font-size: 22px;
+    }
+}
+
 
 @media (max-width: 600px) {
+
+    .vision-mission {
+        padding: 48px 18px;
+    }
+
+    .vision-mission-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .vm-card {
+        padding: 28px 22px;
+    }
 
     .hero h1 {
         font-size: 42px;
