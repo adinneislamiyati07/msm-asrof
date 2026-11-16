@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#172436">
+    <title>Login Super Admin | PT. AFA WISATA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="auth-page">
+    <main class="auth-layout">
+        <section class="auth-branding" aria-labelledby="brandTitle">
+            <a class="brand-lockup" href="index.html" aria-label="MSM Asyrof - kembali ke website">
+                <span class="brand-logo"><img src="images/logomsm.png" alt=""></span>
+                <span class="brand-name">
+                    <strong>PT. Asyrof Fadel Ali</strong>
+                    <span>MSM ASYROF</span>
+                </span>
+            </a>
+
+            <div class="brand-message">
+                <span class="eyebrow">PORTAL PENGELOLAAN</span>
+                <h1 id="brandTitle">Perjalanan hebat,<br><span>dimulai dari sini.</span></h1>
+                <p>Kelola permintaan reservasi dan jadwal armada dalam satu tempat.</p>
+            </div>
+
+            <div class="brand-footnote">
+                <span class="status-pulse" aria-hidden="true"></span>
+                <span>Sistem administrasi MSM Asyrof</span>
+            </div>
+            <div class="brand-orbit brand-orbit-one" aria-hidden="true"></div>
+            <div class="brand-orbit brand-orbit-two" aria-hidden="true"></div>
+        </section>
+
+        <section class="auth-content" aria-labelledby="loginTitle">
+            <div class="auth-form-wrap">
+                <span class="auth-kicker">AREA KHUSUS ADMIN</span>
+                <h2 id="loginTitle">Selamat datang kembali</h2>
+                <p class="auth-intro">Masuk menggunakan akun admin Anda untuk melanjutkan.</p>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="field-group">
+                        <label for="email">Email admin</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            autocomplete="username"
+                            placeholder="admin@afawisata.com"
+                            required>
+                    </div>
+                    <div class="field-group">
+                        <label for="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            autocomplete="current-password"
+                            placeholder="Masukkan password"
+                            required>
+                    </div>
+                    <div id="errorMsg" class="login-error" role="alert" aria-live="polite" hidden></div>
+                    <button class="auth-submit" type="submit">
+                        <span>Masuk ke dashboard</span>
+                        <svg viewBox="0 0 20 20" aria-hidden="true">
+                            <path d="M4.5 10h11m-4.5-4.5L15.5 10 11 14.5" />
+                        </svg>
+                    </button>
+                </form>
+
+                <a class="back-to-site" href="index.html">
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="m12.5 4.5-5.5 5.5 5.5 5.5" />
+                    </svg>
+                    Kembali ke website
+                </a>
+            </div>
+            <p class="auth-copyright">© PT. Asyrof Fadel Ali · MSM Asyrof</p>
+        </section>
+    </main>
+
+    <script type="module" src="login.js"></script>
+</body>
+</html>
