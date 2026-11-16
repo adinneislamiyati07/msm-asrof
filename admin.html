@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#172436">
+    <title>Super Admin Dashboard | PT. AFA WISATA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-page">
+    <header class="admin-topbar">
+        <div class="topbar-inner">
+            <a class="brand-lockup" href="index.html">
+                <span class="brand-logo"><img src="images/logomsm.png" alt=""></span>
+                <span class="brand-name">
+                    <strong>PT. Asyrof Fadel Ali</strong>
+                    <span>MSM ASYROF <i aria-hidden="true"></i> ADMIN</span>
+                </span>
+            </a>
+            <nav class="admin-nav" aria-label="Navigasi admin">
+                <a class="nav-site-link" href="index.html">
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M3.5 9.2 10 4l6.5 5.2M5.5 8v8h9V8M8 16v-5h4v5" />
+                    </svg>
+                    <span>Lihat website</span>
+                </a>
+                <button id="logoutBtn" class="logout-button" type="button">
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M8 4.5H4.5v11H8M11.5 6.5 15 10l-3.5 3.5M7 10h8" />
+                    </svg>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <section class="dashboard-heading" aria-labelledby="dashboardTitle">
+            <div>
+                <span class="eyebrow">RUANG KERJA ADMIN</span>
+                <h1 id="dashboardTitle">Reservasi masuk</h1>
+                <p>Kelola permintaan perjalanan dan konfirmasi jadwal armada Anda.</p>
+            </div>
+            <div class="reservation-count" aria-live="polite">
+                <span class="count-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M7 3.8v3.4m10-3.4v3.4M4.5 9h15M6 5.5h12a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 18 19.5H6A1.5 1.5 0 0 1 4.5 18V7A1.5 1.5 0 0 1 6 5.5Z" />
+                    </svg>
+                </span>
+                <span id="totalReservasi">Total: 0</span>
+            </div>
+        </section>
+
+        <section class="export-panel" aria-labelledby="exportTitle">
+            <div class="export-description">
+                <span class="eyebrow">LAPORAN</span>
+                <h2 id="exportTitle">Ekspor data reservasi</h2>
+                <p>Unduh laporan Excel berdasarkan waktu reservasi dibuat.</p>
+            </div>
+            <div class="export-controls">
+                <label class="export-field">
+                    <span>Periode</span>
+                    <select id="exportPeriod">
+                        <option value="week">Mingguan</option>
+                        <option value="month">Bulanan</option>
+                        <option value="year">Tahunan</option>
+                    </select>
+                </label>
+                <label class="export-field export-reference-field">
+                    <span id="exportReferenceLabel">Pilih tanggal</span>
+                    <input id="exportReference" type="date" required>
+                </label>
+                <button id="exportButton" class="export-button" type="button" disabled>
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M10 3.5v9m-3.5-3.5L10 12.5l3.5-3.5M4.5 13.5v2h11v-2" />
+                    </svg>
+                    <span>Unduh Excel</span>
+                </button>
+            </div>
+            <p id="exportStatus" class="export-status" role="status" aria-live="polite">Memuat data reservasi...</p>
+        </section>
+
+        <section class="reservation-panel" aria-labelledby="reservationListTitle">
+            <div class="panel-heading">
+                <div>
+                    <h2 id="reservationListTitle">Daftar reservasi</h2>
+                    <p>Periksa detail dan perbarui status pemesanan.</p>
+                </div>
+                <span class="panel-live"><i aria-hidden="true"></i> Data reservasi</span>
+            </div>
+            <div class="table-wrap">
+                <table class="reservation-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Waktu pesan</th>
+                            <th scope="col">Pemesan</th>
+                            <th scope="col">Tujuan &amp; durasi</th>
+                            <th scope="col">Jadwal &amp; penjemputan</th>
+                            <th scope="col">Unit bus</th>
+                            <th scope="col">Total harga</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reservationTableBody">
+                        <tr>
+                            <td colspan="8" class="empty-state">Memuat data reservasi...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <footer class="admin-footer">© PT. Asyrof Fadel Ali · MSM Asyrof</footer>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
