@@ -450,13 +450,13 @@ async function loadReservations() {
                 <td class="reservation-cell reservation-time" data-label="Waktu pesan">${waktuPesan}</td>
                 <td class="reservation-cell reservation-customer" data-label="Pemesan">
                     ${data.nama}<br>
-                    <a href="https://wa.me/${data.telepon}" target="_blank" rel="noopener noreferrer" class="reservation-phone">📞 ${data.telepon}</a>
+                    <a href="https://wa.me/${data.telepon}" target="_blank" rel="noopener noreferrer" class="reservation-phone">${data.telepon}</a>
                 </td>
                 <td class="reservation-cell reservation-destination" data-label="Tujuan &amp; durasi">
                     <div><strong>${data.tujuan}</strong><br>${data.durasi} Hari</div>
                 </td>
                 <td class="reservation-cell reservation-schedule" data-label="Jadwal &amp; jemput">
-                    <div>📅 ${data.tanggal}<br>Jam: ${data.jam}<br>Jemput: ${data.penjemputan}</div>
+                    <div>${data.tanggal}<br>Jam: ${data.jam}<br>Jemput: ${data.penjemputan}</div>
                 </td>
                 <td class="reservation-cell reservation-buses" data-label="Unit bus">${listBusHtml}</td>
                 <td class="reservation-cell reservation-price" data-label="Total harga">${data.harga}</td>
