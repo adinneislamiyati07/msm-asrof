@@ -1065,9 +1065,17 @@ svg {
 
     .export-field select,
     .export-field input {
+        display: block;
         width: 100%;
         min-width: 0;
         max-width: 100%;
+        box-sizing: border-box;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .export-field input[type="date"]::-webkit-date-and-time-value {
+        text-align: left;
     }
 
     .export-button {
