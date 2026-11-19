@@ -545,7 +545,20 @@ svg {
     outline: none;
     background: #fff;
     color: var(--admin-ink);
+    font-family: inherit;
     font-size: 10px;
+    font-weight: 500;
+}
+
+.export-field input[type="month"] {
+    text-align: center;
+}
+
+.export-field input[type="month"]::-webkit-datetime-edit {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    text-align: center;
 }
 
 .export-field select:focus,
